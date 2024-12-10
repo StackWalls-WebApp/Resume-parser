@@ -13,9 +13,10 @@ WORKDIR $APP_HOME
 COPY requirements.txt .
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy English model
+# Download spaCy English model separately
 RUN python -m spacy download en_core_web_sm
 
 # Download NLTK data
@@ -27,5 +28,5 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 5000
 
-# Set the entry point to run the app
-CMD ["python", "app.py"]
+# Set the entry point to run the app with gunicorn for better performance
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app", "--workers", "3", "--threads", "2", "--timeout", "120"]

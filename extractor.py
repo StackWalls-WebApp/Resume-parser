@@ -1,4 +1,3 @@
-# extractor.py
 import os
 import re
 import nltk
@@ -6,9 +5,20 @@ import spacy
 import docx2txt
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-# Load spaCy model and NLTK data
-nltk.download('punkt', quiet=True)
+# Load spaCy model and NLTK data once
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+
 nlp = spacy.load('en_core_web_sm')
+
+# Pre-load skills to avoid reading repeatedly
+skills_db = []
+skills_file = 'skills.txt'
+if os.path.exists(skills_file):
+    with open(skills_file, 'r', encoding='utf-8') as f:
+        skills_db = [line.strip().lower() for line in f if line.strip()]
 
 def extract_text_from_pdf(file_path):
     try:
@@ -33,15 +43,12 @@ def extract_text(file_path):
         raise ValueError(f"Unsupported file format: {file_path}")
 
 def extract_skills(text):
-    skills_file = 'skills.txt'
-    if not os.path.exists(skills_file):
+    if not skills_db:
         return []
-    with open(skills_file, 'r', encoding='utf-8') as f:
-        skills_db = [line.strip().lower() for line in f]
     skills_found = set()
     text_lower = text.lower()
     for skill in skills_db:
-        pattern = r'(?i)\b' + re.escape(skill.lower()) + r'\b'
+        pattern = r'(?i)\b' + re.escape(skill) + r'\b'
         matches = re.findall(pattern, text_lower)
         if matches:
             skills_found.add(skill)

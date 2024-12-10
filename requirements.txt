@@ -1,7 +1,6 @@
 blis
 catalogue
 click
-en-core-web-sm
 joblib
 murMurHash
 regex
@@ -26,3 +25,4 @@ nltk
 scikit-learn
 pdfplumber
 spacy
+gunicorn
