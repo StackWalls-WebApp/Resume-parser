@@ -1,32 +1,34 @@
-# Dockerfile
-# Use the official Python image as base
+# Use an official lightweight Python image
 FROM python:3.9-slim
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV APP_HOME=/app
+# Set the working directory in the container
+WORKDIR /app
 
-# Create the working directory
-WORKDIR $APP_HOME
+# Install system dependencies required for pdfminer and other tools
+# This can vary depending on your dependencies.
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    poppler-utils \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements.txt first to leverage Docker cache
 COPY requirements.txt .
 
-# Install dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy English model separately
+# Download spacy model
 RUN python -m spacy download en_core_web_sm
 
-# Download NLTK data
-RUN python -m nltk.downloader punkt
-
-# Copy the rest of the application code
+# Copy the rest of the application code into the container
 COPY . .
 
-# Expose the port the app runs on
+# Expose the port your Flask app runs on
 EXPOSE 5000
 
-# Set the entry point to run the app with gunicorn for better performance
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app", "--workers", "3", "--threads", "2", "--timeout", "120"]
+# Set environment variables as needed (optional)
+# ENV FLASK_ENV=production
+
+# Command to run the Flask app
+CMD ["python", "app.py"]
